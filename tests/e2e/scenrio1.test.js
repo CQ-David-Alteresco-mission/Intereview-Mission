@@ -1,5 +1,6 @@
+const pHelper = require('../helpers/pup');
 
-const timeout = 5000;
+const timeout = 50000;
 const dialogText = ['This is a javascript test','A new message on click button action'];
 let dialogTextNum = 0;
 let DialogMessageText = '';
@@ -7,10 +8,13 @@ describe('inject javascript that display an alert message on a click button acti
 
     beforeAll(async () =>{
         try{
+            const po = await pHelper.Init();
+            page = po.page;
+            browser = po.browser;
             let myWebUrl = 'https://www.wework.com/he-IL/info/the-future-of-work-is-flexible';
-            await page.goto(myWebUrl,{waitUntil:"domcontentloaded"});
-        }catch{
-            throw new Error('Page not loaded')
+            await page.goto(myWebUrl,{waitUntil:"networkidle0"});
+        }catch(e){
+            console.log(`Problem loading page ${e}`); 
         }
     
         try{
@@ -18,11 +22,15 @@ describe('inject javascript that display an alert message on a click button acti
                 DialogMessageText = dialog.message();
                 await dialog.dismiss();
             });
-        }catch{
-            throw new Error('Dialog Error')
+        }catch(e){
+            console.log(`Dialog Error ${e}`);
         }
 
-    });
+    },timeout);
+
+    afterAll(() => {
+        browser.close();
+     });
 
     describe('Compare alert message after changing text by clicking on action button (injection)', () => {
         beforeEach(async () =>{
@@ -37,26 +45,26 @@ describe('inject javascript that display an alert message on a click button acti
                 },dialogText[dialogTextNum])
 
             }catch(e){
-                throw new Error("Evaluate Error" + e);
-                
+            console.log(`"Evaluate Error ${e}`);
             }
+
             try{
                 await page.click('.ray-button');
                 dialogTextNum++;
             }catch(e){
-                throw new Error("Button was not clicked" + e);
+                console.log(`Button was not clicked ${e}`);
             }
             
         });
         
-        it('Compare alert message', async () => {
+        it('Compare alert message', () => {
             expect(DialogMessageText).toBe(dialogText[0]);
-        }, timeout);
+        });
 
         
-        it('Compare alert message', async () => {
+        it('Compare alert message', () => {
             expect(DialogMessageText).toBe(dialogText[1]);
-        }, timeout);
+        });
     }); 
 
 });
